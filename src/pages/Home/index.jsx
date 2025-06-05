@@ -17,9 +17,10 @@ const POKEMON_LIST = [
   { name: 'beedrill', id: 15 },
 ];
 
-export default function Detalhes() {
+export default function Home() {
   const [pokemonData, setPokemonData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [favorites, setFavorites] = useState(new Set());
 
   useEffect(() => {
     const fetchData = async () => {
@@ -61,6 +62,19 @@ export default function Detalhes() {
     fetchData();
   }, []);
 
+  // Função para alternar o estado de favorito
+  const toggleFavorite = (pokemonId) => {
+    setFavorites(prevFavorites => {
+      const newFavorites = new Set(prevFavorites);
+      if (newFavorites.has(pokemonId)) {
+        newFavorites.delete(pokemonId);
+      } else {
+        newFavorites.add(pokemonId);
+      }
+      return newFavorites;
+    });
+  };
+
   if (loading) return (
     <div style={{
       display: 'flex',
@@ -95,8 +109,6 @@ export default function Detalhes() {
       minHeight: '100vh',
       padding: '20px'
     }}>
-    
-
       <h1 style={{ 
         color: '#142727', 
         textAlign: 'center',
@@ -124,7 +136,6 @@ export default function Detalhes() {
               <img 
                 src={pokemon.sprite} 
                 alt={pokemon.name}
-                
                 style={{ 
                   width: '80px',
                   height: '80px',
@@ -132,15 +143,46 @@ export default function Detalhes() {
                   objectFit: 'contain'
                 }}
               />
-              <div>
-                <h2 style={{ 
-                  color: '#2F4F4F',
-                  margin: 0,
-                  textTransform: 'capitalize'
+              <div style={{ flex: 1 }}>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between'
                 }}>
-                  #{pokemon.id.toString().padStart(3, '0')} - {pokemon.name} - {"🤍"}
-
-                </h2>
+                  <h2 style={{ 
+                    color: '#2F4F4F',
+                    margin: 0,
+                    textTransform: 'capitalize',
+                    flex: 1
+                  }}>
+                    #{pokemon.id.toString().padStart(3, '0')} - {pokemon.name}
+                  </h2>
+                  
+                  {/* Coração clicável */}
+                  <button
+                    onClick={() => toggleFavorite(pokemon.id)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      fontSize: '24px',
+                      cursor: 'pointer',
+                      padding: '5px',
+                      borderRadius: '50%',
+                      transition: 'all 0.3s ease',
+                      marginLeft: '10px'
+                    }}
+                    onMouseOver={(e) => {
+                      e.target.style.transform = 'scale(1.2)';
+                      e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
+                    }}
+                    onMouseOut={(e) => {
+                      e.target.style.transform = 'scale(1)';
+                      e.target.style.backgroundColor = 'transparent';
+                    }}
+                  >
+                    {favorites.has(pokemon.id) ? '❤️' : '🤍'}
+                  </button>
+                </div>
 
                 <p style={{ 
                   marginTop: '5px',
@@ -194,6 +236,23 @@ export default function Detalhes() {
           </div>
         ))}
       </div>
+
+      {/* Contador de favoritos */}
+      {favorites.size > 0 && (
+        <div style={{
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          backgroundColor: '#2F4F4F',
+          color: '#98FB98',
+          padding: '10px 15px',
+          borderRadius: '25px',
+          fontWeight: 'bold',
+          boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
+        }}>
+          ❤️ {favorites.size} Pokémon favoritado{favorites.size !== 1 ? 's' : ''}
+        </div>
+      )}
     </div>
   );
 }
