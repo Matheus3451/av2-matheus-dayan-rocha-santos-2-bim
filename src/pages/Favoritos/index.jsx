@@ -1,71 +1,33 @@
-import axios from "axios";
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useFavorites } from "../../contexts/FavoritesContext";
 
-// Lista dos Pokémon favoritos
-const FAVORITE_POKEMON = [
-  { name: 'growlithe', id: 58 },
-  { name: 'ampharos', id: 181 },
-  { name: 'corviknight', id: 823 },
-  { name: 'pancham', id: 674 },
-  { name: 'volcarona', id: 637 }
-];
+// Função para cores dos tipos
+function getTypeColor(type) {
+  const colors = {
+    normal: "#A8A878",
+    fire: "#F08030",
+    water: "#6890F0",
+    electric: "#F8D030",
+    grass: "#78C850",
+    ice: "#98D8D8",
+    fighting: "#C03028",
+    poison: "#A040A0",
+    ground: "#E0C068",
+    flying: "#A890F0",
+    psychic: "#F85888",
+    bug: "#A8B820",
+    rock: "#B8A038",
+    ghost: "#705898",
+    dragon: "#7038F8",
+    dark: "#705848",
+    steel: "#B8B8D0",
+    fairy: "#EE99AC"
+  };
+  return colors[type] || "#777";
+}
 
 export default function Favoritos() {
-  const [pokemonData, setPokemonData] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = await Promise.all(
-          FAVORITE_POKEMON.map(async (pokemon) => {
-            const response = await axios.get(`https://pokeapi.co/api/v2/pokemon/${pokemon.id}`);
-            return {
-              ...pokemon,
-              sprite: response.data.sprites.other['official-artwork'].front_default || 
-                     response.data.sprites.front_default
-            };
-          })
-        );
-        setPokemonData(data);
-      } catch (error) {
-        console.error("Erro ao buscar Pokémon favoritos:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  if (loading) return (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      height: '100vh',
-      backgroundColor: '#ADD8E6'
-    }}>
-      <div style={{
-        padding: '20px',
-        backgroundColor: '#98FB98',
-        borderRadius: '10px',
-        textAlign: 'center'
-      }}>
-        <div style={{
-          width: '50px',
-          height: '50px',
-          border: '5px solid #142727',
-          borderTopColor: 'transparent',
-          borderRadius: '50%',
-          margin: '0 auto 15px',
-          animation: 'spin 1s linear infinite'
-        }} />
-        <p style={{ color: '#2F4F4F', fontWeight: 'bold' }}>Carregando Favoritos...</p>
-      </div>
-    </div>
-  );
+  const { favoritePokemonData, toggleFavorite, favoritesCount } = useFavorites();
 
   return (
     <div style={{
@@ -93,50 +55,205 @@ export default function Favoritos() {
         color: '#142727', 
         marginBottom: '30px'
       }}>
-        Meus Pokémon Favoritos de todos os tempos
+        Meus Pokémon Favoritos ({favoritesCount})
       </h1>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-        gap: '30px',
-        maxWidth: '1000px',
-        margin: '0 auto'
-      }}>
-        {pokemonData.map((pokemon, index) => (
-          <div 
-            key={index}
+      {favoritePokemonData.length === 0 ? (
+        <div style={{
+          backgroundColor: '#98FB98',
+          borderRadius: '10px',
+          padding: '40px',
+          maxWidth: '500px',
+          margin: '0 auto',
+          boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
+        }}>
+          <h2 style={{ 
+            color: '#2F4F4F',
+            marginBottom: '20px'
+          }}>
+            Nenhum Pokémon favoritado ainda! 💔
+          </h2>
+          <p style={{ 
+            color: '#2F4F4F',
+            marginBottom: '20px'
+          }}>
+            Vá para a página inicial e clique no coração dos Pokémon que você mais gosta!
+          </p>
+          <Link 
+            to="/" 
             style={{
-              backgroundColor: '#98FB98',
-              borderRadius: '10px',
-              padding: '20px',
-              boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-              transition: 'transform 0.3s',
-              ':hover': {
-                transform: 'scale(1.05)'
-              }
+              display: 'inline-block',
+              padding: '12px 20px',
+              backgroundColor: '#142727',
+              color: '#8FBC8F',
+              borderRadius: '8px',
+              textDecoration: 'none',
+              fontWeight: 'bold'
             }}
           >
-            <img 
-              src={pokemon.sprite} 
-              alt={pokemon.name}
-              style={{ 
-                width: '150px',
-                height: '150px',
-                objectFit: 'contain',
-                filter: 'drop-shadow(0 0 8px rgba(0,0,0,0.2))'
+            Ir para Home
+          </Link>
+        </div>
+      ) : (
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+          gap: '20px',
+          maxWidth: '1200px',
+          margin: '0 auto'
+        }}>
+          {favoritePokemonData.map((pokemon, index) => (
+            <div 
+              key={pokemon.id}
+              style={{
+                backgroundColor: '#98FB98',
+                borderRadius: '10px',
+                padding: '20px',
+                boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                position: 'relative',
+                transition: 'transform 0.3s ease'
               }}
-            />
-            <h3 style={{ 
-              color: '#2F4F4F',
-              marginTop: '10px',
-              textTransform: 'capitalize'
-            }}>
-              {pokemon.name}
-            </h3>
-          </div>
-        ))}
-      </div>
+              onMouseOver={(e) => {
+                e.currentTarget.style.transform = 'translateY(-5px)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+            >
+              {/* Botão de remover favorito */}
+              <button
+                onClick={() => toggleFavorite(pokemon)}
+                style={{
+                  position: 'absolute',
+                  top: '10px',
+                  right: '10px',
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '20px',
+                  cursor: 'pointer',
+                  padding: '5px',
+                  borderRadius: '50%',
+                  transition: 'all 0.3s ease'
+                }}
+                onMouseOver={(e) => {
+                  e.target.style.transform = 'scale(1.2)';
+                  e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
+                }}
+                onMouseOut={(e) => {
+                  e.target.style.transform = 'scale(1)';
+                  e.target.style.backgroundColor = 'transparent';
+                }}
+                title="Remover dos favoritos"
+              >
+                ❤️
+              </button>
+
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '15px' }}>
+                <img 
+                  src={pokemon.sprite} 
+                  alt={pokemon.name}
+                  style={{ 
+                    width: '80px',
+                    height: '80px',
+                    marginRight: '15px',
+                    objectFit: 'contain',
+                    filter: 'drop-shadow(0 0 8px rgba(0,0,0,0.2))'
+                  }}
+                />
+                <div style={{ flex: 1, textAlign: 'left' }}>
+                  <h2 style={{ 
+                    color: '#2F4F4F',
+                    margin: 0,
+                    textTransform: 'capitalize',
+                    fontSize: '1.3rem'
+                  }}>
+                    #{pokemon.id.toString().padStart(3, '0')} - {pokemon.name}
+                  </h2>
+                  
+                  {pokemon.category && (
+                    <p style={{ 
+                      marginTop: '5px',
+                      fontStyle: 'italic',
+                      fontSize: '0.9rem',
+                      color: '#2F4F4F'
+                    }}>
+                      {pokemon.category}
+                    </p>
+                  )}
+                </div>
+              </div>
+              
+              {/* Descrição se disponível */}
+              {pokemon.description && (
+                <div style={{ marginBottom: '15px', textAlign: 'left' }}>
+                  <h3 style={{ 
+                    marginBottom: '8px',
+                    fontSize: '1rem',
+                    color: '#2F4F4F'
+                  }}>
+                    Descrição:
+                  </h3>
+                  <p style={{ 
+                    margin: 0,
+                    lineHeight: '1.4',
+                    fontSize: '0.9rem',
+                    color: '#2F4F4F'
+                  }}>
+                    "{pokemon.description}"
+                  </p>
+                </div>
+              )}
+              
+              {/* Tipos se disponível */}
+              {pokemon.types && (
+                <div style={{ textAlign: 'left' }}>
+                  <h3 style={{ 
+                    marginBottom: '8px',
+                    fontSize: '1rem',
+                    color: '#2F4F4F'
+                  }}>
+                    Tipos:
+                  </h3>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    {pokemon.types.map((type, i) => (
+                      <span 
+                        key={i}
+                        style={{
+                          padding: '4px 12px',
+                          borderRadius: '20px',
+                          backgroundColor: getTypeColor(type),
+                          color: 'white',
+                          fontSize: '0.8rem',
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        {type}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Contador fixo de favoritos */}
+      {favoritesCount > 0 && (
+        <div style={{
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          backgroundColor: '#2F4F4F',
+          color: '#98FB98',
+          padding: '10px 15px',
+          borderRadius: '25px',
+          fontWeight: 'bold',
+          boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
+        }}>
+          ❤️ {favoritesCount} Favorito{favoritesCount !== 1 ? 's' : ''}
+        </div>
+      )}
     </div>
   );
 }

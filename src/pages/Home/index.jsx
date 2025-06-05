@@ -1,17 +1,18 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useFavorites } from "../../contexts/FavoritesContext";
 
 const POKEMON_LIST = [
   { name: 'bulbassaur', id: 1 },
-  { name: 'ivyssaur', id:  2},
+  { name: 'ivyssaur', id: 2 },
   { name: 'venossaur', id: 3 },
   { name: 'squirtle', id: 4 },
   { name: 'wartortle', id: 5 },
   { name: 'blastoise', id: 6 },
   { name: 'charmander', id: 7 },
   { name: 'chameleon', id: 8 },
-  { name: 'charizard', id:  9},
+  { name: 'charizard', id: 9 },
   { name: 'weedle', id: 13 },
   { name: 'kakuna', id: 14 },
   { name: 'beedrill', id: 15 },
@@ -20,7 +21,7 @@ const POKEMON_LIST = [
 export default function Home() {
   const [pokemonData, setPokemonData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [favorites, setFavorites] = useState(new Set());
+  const { toggleFavorite, isFavorite, favoritesCount } = useFavorites();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,7 +45,6 @@ export default function Home() {
               description: description.replace(/[\n\f]/g, ' '),
               sprite: pokemonResponse.data.sprites.other['official-artwork'].front_default,
               types: pokemonResponse.data.types.map(t => t.type.name),
-              // Adicionando categoria (gênero)
               category: speciesResponse.data.genera.find(g => g.language.name === "pt")?.genus || 
                        speciesResponse.data.genera.find(g => g.language.name === "en")?.genus ||
                        "Categoria desconhecida"
@@ -63,16 +63,8 @@ export default function Home() {
   }, []);
 
   // Função para alternar o estado de favorito
-  const toggleFavorite = (pokemonId) => {
-    setFavorites(prevFavorites => {
-      const newFavorites = new Set(prevFavorites);
-      if (newFavorites.has(pokemonId)) {
-        newFavorites.delete(pokemonId);
-      } else {
-        newFavorites.add(pokemonId);
-      }
-      return newFavorites;
-    });
+  const handleToggleFavorite = (pokemon) => {
+    toggleFavorite(pokemon);
   };
 
   if (loading) return (
@@ -160,7 +152,7 @@ export default function Home() {
                   
                   {/* Coração clicável */}
                   <button
-                    onClick={() => toggleFavorite(pokemon.id)}
+                    onClick={() => handleToggleFavorite(pokemon)}
                     style={{
                       background: 'none',
                       border: 'none',
@@ -180,7 +172,7 @@ export default function Home() {
                       e.target.style.backgroundColor = 'transparent';
                     }}
                   >
-                    {favorites.has(pokemon.id) ? '❤️' : '🤍'}
+                    {isFavorite(pokemon.id) ? '❤️' : '🤍'}
                   </button>
                 </div>
 
@@ -238,7 +230,7 @@ export default function Home() {
       </div>
 
       {/* Contador de favoritos */}
-      {favorites.size > 0 && (
+      {favoritesCount > 0 && (
         <div style={{
           position: 'fixed',
           bottom: '20px',
@@ -250,7 +242,7 @@ export default function Home() {
           fontWeight: 'bold',
           boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
         }}>
-          ❤️ {favorites.size} Pokémon favoritado{favorites.size !== 1 ? 's' : ''}
+          ❤️ {favoritesCount} Pokémon favoritado{favoritesCount !== 1 ? 's' : ''}
         </div>
       )}
     </div>
